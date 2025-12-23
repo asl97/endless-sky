@@ -14,7 +14,7 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-# This script implements the cipher by Lia Gerty described here:
+# This script is base on korath-cipher.py that implements the cipher by Lia Gerty described here:
 #
 #    https://github.com/endless-sky/endless-sky/pull/7101
 #
@@ -25,6 +25,8 @@
 #
 # INSTRUCTIONS
 #
+# Note: Also see instructions in korath-cipher.py
+#
 # Before you run this script, first you need to translate your desired
 # phrase from English to Indonesian. Here's an example:
 #
@@ -33,16 +35,15 @@
 #
 # Next, send that Indonesian text into this script's stdin, and you'll see:
 #
-# ORIGINAL: Dalam kebenaran, saya hanya melihat kebohongan.
-# REVERSED: malaD ,naranebek ayas aynah tahilem .nagnohobek
-# EXILE:    famaS ,ralarehet aga' agrap kapimef .ranrupuhet
-# EFRETI:   fanaT ,raparebes adam adrah kahinef .ralruhubes
+# ORIGINAL:  Dalam kebenaran, saya hanya melihat kebohongan.
+# REVERSED*: Malad naranebek, ayas aynah tahilem nagnohobek.
+# EXILE:     Famas ralarehet, aga' agrap kapimef ranrupuhet.
+# EFRETI:    Fanat raparebes, adam adrah kahinef ralruhubes.
 #
-# Clearly, you'll need to manually correct a few things. The commas
-# and periods are in the wrong place, the wrong letters are
-# capitalized, and it's probably best to avoid common names and
-# religious concepts. (Adam = the first man in some religions.) You
-# should also make sure the end product is pronounceable, with
+# This version of the script tries to put the punctuation and capitalization correctly
+# Note that it's probably best to avoid common names and religious concepts.
+# (Adam = the first man in some religions.)
+# You should also make sure the end product is pronounceable, with
 # particular attention to ' characters in Exile words. These are meant
 # to represent glottal stops; if you are unfamiliar, imagine what the
 # word would sound like with a k in place of the '. If it is too
@@ -112,15 +113,31 @@ for line in sys.stdin:
 	efretis = []               # those words after the efret cipher
 
 	for word in words:
+		# Check if the word is capitalize
+		iscap = word[0].isupper() and word[1:].islower()
+		
+		# Check for punctuation and exclude them from the reversal
+		punctuation = ""
+		while word[-1] in ",.?!": # not .isalnum
+			punctuation = word[-1] + punctuation
+			word = word[:-1]
+
 		# Reverse the word:
 		drow = ''.join(reversed(word))
+
+		# Add back the punctuation if any was found
+		drow += punctuation
+
+		# capitalize the word if the original was capitalize
+		if iscap:
+			drow = drow.capitalize()
+
 		sdrow.append(drow)
 
 		# Run the reversed word through the cipher:
 		exile=''
 		efreti=''
-		for from_index in range(len(drow)):
-			char = drow[from_index]
+		for char in drow:
 			if char in to_exile:
 				exile += to_exile[char]
 			else:
@@ -135,8 +152,8 @@ for line in sys.stdin:
 		efretis.append(efreti)
 
 	# Print the results of this line:
-	print("ORIGINAL: "+" ".join(words))
-	print("REVERSED: "+" ".join(sdrow))
-	print("EXILE:    "+" ".join(exiles))
-	print("EFRETI:   "+" ".join(efretis))
+	print("ORIGINAL:  "+" ".join(words))
+	print("REVERSED*: "+" ".join(sdrow))
+	print("EXILE:     "+" ".join(exiles))
+	print("EFRETI:    "+" ".join(efretis))
 	print("")
